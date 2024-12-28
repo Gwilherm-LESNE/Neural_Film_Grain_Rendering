@@ -74,6 +74,7 @@ To visualize your training:
 ```bash
 tensorboard --logdir=models/GrainNet
 ```
+
 ### Training the grain size estimator
 
 ```bash
