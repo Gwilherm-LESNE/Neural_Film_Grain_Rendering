@@ -4,14 +4,14 @@ Official implementation of the paper [*Neural Film Grain Rendering*](https://hal
 
 ![Python 3.9](https://img.shields.io/badge/Python-3.9-yellow.svg)
 ![pytorch 1.12.0](https://img.shields.io/badge/Pytorch-1.12.0-blue.svg)
-![Cuda 11.6](https://img.shields.io/badge/Cuda-11.6-yellow.svg)
 
 ![image](./images/teaser.png)
 **Figure:** *Film Grain rendered by our method*
 
 > **Neural Film Grain Rendering** <br>
 >  Gwilherm Lesné, Yann Gousseau, Saïd Ladjal, Alasdair Newson <br>
->  LTCI, Télécom Paris <br>
+>  LTCI, Télécom Paris 
+>  ISIR, Sorbonne Université<br>
 
 ## Set up
 
@@ -30,7 +30,7 @@ Load the conda environment
 ```bash
 conda activate filmgrain
 ```
-**N.B.** This code relies on the official CUDA implementation of **A Stochastic Film Grain Rendering Method** for creating the database and computing the metrics. Please follow the **requirements** [here](https://github.com/alasdairnewson/film_grain_rendering_gpu) to use it.
+**N.B.** This code relies on the official CUDA implementation of [A Stochastic Film Grain Model for Resolution‐Independent Rendering]{https://onlinelibrary.wiley.com/doi/10.1111/cgf.13159} for creating the database and computing the metrics. Please follow the **requirements** [here](https://github.com/alasdairnewson/film_grain_rendering_gpu) to use it.
 
 ## Getting data
 
@@ -39,7 +39,7 @@ You have two options:
   - Download the files [here](XXX)
   - Unzip `XXX.zip` in `data` folder
 - You want to train the model on your own data:
-  - Get the code [here](https://github.com/alasdairnewson/film_grain_rendering_gpu)
+  - Get the code [here](https://github.com/alasdairnewson/film_grain_rendering_gpu) and follow the steps to be able to run it properly
   - Add the path to the executable (film_grain_rendering_main) in `dataset.py`
   - Create the dataset:
     ```
@@ -73,18 +73,14 @@ tensorboard --logdir=models
 ## Running a pretrained model
 
 ```bash
-python edit.py -c code_value -a attr_index
+python edit.py -i ./input/path -o ./output/path -gs grain_size
 ```
 Options:
-  - `-c` Code value. We recommend to put 2.5 or -2.5 depending on wether you want to add or remove the attribute.
-  - `-a` Attribute index. Indicates which attribute to edit based on its index.
-  - `-s` Seed, used for sampling in $\mathcal{W}$
-  - `-sm` sample mode. `0` is sampling in the dataset you used to train. `1` is random sampling in $\mathcal{W}$.
-  - `-nf` Path to the pretrained network file
-  - `-ln` Number of layers in the network
-  - `-k` Number of PCA dimensions kept by the network
-  - `-bn` Indicates if the network has batch norm layers or not
-  - `-df` Path to the dataset. Used if `-sm` is 0
+  - `-i` Path to the input image.
+  - `-o` Path to the output image.
+  - `-s` Grain size used, it can be any value between 0.01 and 0.8.
+  - `-s` Seed
+  - `-m` Path to the pretrained network file, default: './models/GrainNet/grainnet.pt'
 
 ## Licence
 

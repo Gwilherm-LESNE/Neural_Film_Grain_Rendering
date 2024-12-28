@@ -36,7 +36,7 @@ class MyNorm(nn.Module):
         return x
         
 class GrainNet(nn.Module):
-    def __init__(self, activation = 'tanh', layer_nb = 2):
+    def __init__(self, activation = 'tanh', block_nb = 2):
         """
         Network which adds grain to a given image.
 
@@ -52,9 +52,9 @@ class GrainNet(nn.Module):
         """
         super(GrainNet, self).__init__()
 
-        if not layer_nb in [1,2,3]:
-            raise ValueError('layer_nb must be 1,2 or 3')
-        self.layer_nb = layer_nb
+        if not block_nb in [1,2,3]:
+            raise ValueError('block_nb must be 1,2 or 3')
+        self.block_nb = block_nb
         
         self.entry_conv = nn.Sequential(nn.Conv2d(2,16,kernel_size = (3,3), stride=1, padding='same', padding_mode='reflect'),
                                     nn.LeakyReLU())
@@ -63,7 +63,7 @@ class GrainNet(nn.Module):
                                     nn.InstanceNorm2d(16))
         self.mn1 = MyNorm(16)
         
-        if self.layer_nb == 3:
+        if self.block_nb == 3:
 
             self.augment = nn.Sequential(nn.Conv2d(16,32,kernel_size = (3,3), stride=1, padding='same', padding_mode='reflect'),
                                         nn.LeakyReLU())
@@ -75,7 +75,7 @@ class GrainNet(nn.Module):
             self.reduce = nn.Sequential(nn.Conv2d(32,16,kernel_size = (3,3), stride=1, padding='same', padding_mode='reflect'),
                                         nn.LeakyReLU())
             
-        if self.layer_nb > 1:
+        if self.block_nb > 1:
                 
             self.block3 = nn.Sequential(ResidualBlock(16),
                                         nn.InstanceNorm2d(16))
@@ -103,7 +103,7 @@ class GrainNet(nn.Module):
         x1 = self.block1(x0)
         x1 = self.mn1(x1, grain_radius)
 
-        if self.layer_nb == 3:
+        if self.block_nb == 3:
             x2 = self.augment(x1)
             
             x3 = self.block2(x2)
@@ -115,12 +115,12 @@ class GrainNet(nn.Module):
             x5 = self.mn3(x5, grain_radius)
             x6 = self.out_conv(x5 + x0)
 
-        if self.layer_nb == 2:          
+        if self.block_nb == 2:          
             x5 = self.block3(x1)
             x5 = self.mn3(x5, grain_radius)
             x6 = self.out_conv(x5 + x0)
         
-        if self.layer_nb == 1:
+        if self.block_nb == 1:
             x6 = self.out_conv(x1)
 
         if self.activation == 'tanh':

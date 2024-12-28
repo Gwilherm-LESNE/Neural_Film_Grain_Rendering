@@ -118,12 +118,7 @@ def train(parameters, label_folder, save_folder='/folder/'):
         from_chkpt = False
         while os.path.exists('./models'+save_folder+str(idx_name)+'/'):
             if os.path.exists('./models'+save_folder+str(idx_name)+'/chkpt.pt'):
-                
-                hyper_params = dict({"lr": params[0], 
-                                    "bsize": params[1], 
-                                    "n_epoch": params[2],
-                                    "step_size": params[3],
-                                    "gamma": params[4]})
+                hyper_params = dict(zip(parameters.keys(),params))
                 checkpoint = torch.load('./models'+save_folder+str(idx_name)+'/chkpt.pt')
                 chkpt_params = dict(zip(list(hyper_params.keys()), [checkpoint[key] for key in hyper_params.keys()]))
                 
@@ -243,24 +238,19 @@ def train(parameters, label_folder, save_folder='/folder/'):
                 writer.add_scalar("Loss/TestLoss", test_loss/test_steps, epoch)
                 writer.flush()
 
-            if epoch%20==19:
+            if epoch%50==49:
                 #Save checkpoints
                 if epoch == n_epoch-1:
                     training_finished = True
                 else:
                     training_finished = False
                 
-                torch.save({
+                state = dict({
                 'model_state_dict': net.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'epoch': epoch,
-                'training_finished': training_finished,
-                'lr': params[0], 
-                'bsize': params[1], 
-                'n_epoch': params[2],
-                'step_size': params[3],
-                'gamma': params[4],
-                }, './models'+save_folder+str(idx_name)+'/chkpt.pt')
+                'training_finished': training_finished})
+                torch.save(state|dict(zip(parameters.keys(),params)), './models'+save_folder+str(idx_name)+'/chkpt.pt')
         
         #-------#Plot outputs#-------#
         inputs, radius = next(iter(test_dataloader))
@@ -315,7 +305,7 @@ if __name__=='__main__':
           batch_size = [16],
           n_epoch = [500],
           step_size = [1],
-          gamma = [0.99,1]
+          gamma = [0.99]
     )
     
     import time
