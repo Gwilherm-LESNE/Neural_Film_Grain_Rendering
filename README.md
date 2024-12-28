@@ -49,21 +49,23 @@ You have two options:
 ## Training
 
 ```bash
-python train.py
+python train.py -i './input/path' -g './grain/path' -s './save/path'
 ```
+Required:
+  - `-i` Path to the folder containing the grain-free images
+  - `-g` Path to the folder containing the grainy images
+  - `-s` Path where to save the model and its checkpoint
 Options:
   - `-lr` Learning rate
-  - `-ln` Number of dense layers to use for both your encoder and decoder.
   - `-bs` Batch size
   - `-ne` Number of epochs
-  - `-bn` Tells if you put batch normalisation layers in your auto-encoder
-  - `-aw` Weight for attribute loss term
-  - `-dw` Weight for disentanglement loss term
-  - `-k` Number of PCA dimensions to keep
-  - `-dl` Disentanglement loss, you may want to disentangle the latent space or take into account the natural correlations of your data. The default is the former. For the latter, the CelebA attribute correlations will be used.
-  - `-ai` Indices of the attributes you want to take into account
-  - `-df` Path to the folder where the data is stored (`data.pkl` and `label.pkl` files)
-  - `-sp` Path to the folder you want to save the model in
+  - `-ss` Step size for optimizer scheduler
+  - `-ga` Gamma for optimizer scheduler
+  - `-si` Indices where to take the activation map of VGG
+  - `-sw` Weights for the corresponding activation maps of VGG
+  - `-ac` Activation function to use
+  - `-w` Weight between content and style terms fro the loss function
+  - `-bn` Number of conv layer blocks in the architecture
 
 To visualize your training:
 ```bash

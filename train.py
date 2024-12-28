@@ -424,7 +424,7 @@ if __name__=='__main__':
     parser.add_argument("-sw", '--style_weights', nargs='+', metavar = 'style_weights', help = "Weights for the corresponding activation maps of VGG", default = [1/(2**n) for n in [0,1,2,3]])
     parser.add_argument("-ac", '--activation', metavar = 'activation', help = "Activation function to use", type=str, default = 'tanh')
     parser.add_argument("-w", '--weight', metavar = 'weight', help = "Weight between content and style terms fro the loss function", type=float,  default = 1.)
-    parser.add_argument("-ln", '--block_number', metavar = 'block_number', help = "Number of conv layer blocks in the architecture", type=int,  default = 2)
+    parser.add_argument("-bn", '--block_number', metavar = 'block_number', help = "Number of conv layer blocks in the architecture", type=int,  default = 2)
     args = parser.parse_args()
 
     if not args.block_number in [1,2,3]:
