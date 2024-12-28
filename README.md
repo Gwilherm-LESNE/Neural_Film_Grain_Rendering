@@ -30,7 +30,7 @@ Load the conda environment
 ```bash
 conda activate filmgrain
 ```
-**N.B.** This code relies on the official CUDA implementation of [A Stochastic Film Grain Model for Resolution‐Independent Rendering]{https://onlinelibrary.wiley.com/doi/10.1111/cgf.13159} for creating the database and computing the metrics. Please follow the **requirements** [here](https://github.com/alasdairnewson/film_grain_rendering_gpu) to use it.
+**N.B.** This code relies on the official CUDA implementation of [**A Stochastic Film Grain Model for Resolution‐Independent Rendering**](https://onlinelibrary.wiley.com/doi/10.1111/cgf.13159) for creating the database and computing the metrics. Please follow the **requirements** [here](https://github.com/alasdairnewson/film_grain_rendering_gpu) to use it.
 
 ## Getting data
 
@@ -43,7 +43,7 @@ You have two options:
   - Add the path to the executable (film_grain_rendering_main) in `dataset.py`
   - Create the dataset:
     ```
-    python dataset.py ./data/path_to__clean_dataset -m ./data/path_to_newson_method/
+    python dataset.py ./data/path_to_clean_dataset -m ./data/path_to_newson_method/
     ```
 
 ## Training
@@ -55,6 +55,7 @@ Required:
   - `-i` Path to the folder containing the grain-free images
   - `-g` Path to the folder containing the grainy images
   - `-s` Path where to save the model and its checkpoint
+
 Options:
   - `-lr` Learning rate
   - `-bs` Batch size
