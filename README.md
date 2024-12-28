@@ -2,8 +2,8 @@
 
 Official implementation of the paper [*Neural Film Grain Rendering*](https://hal.science/hal-04667141)
 
-![Python 3.9](https://img.shields.io/badge/Python-3.9-yellow.svg)
-![pytorch 1.12.0](https://img.shields.io/badge/Pytorch-1.12.0-blue.svg)
+![Python 3.10](https://img.shields.io/badge/Python-3.10-yellow.svg)
+![pytorch 2.5.0](https://img.shields.io/badge/Pytorch-2.5.0-blue.svg)
 
 ![image](./images/teaser.png)
 **Figure:** *Film Grain rendered by our method*
