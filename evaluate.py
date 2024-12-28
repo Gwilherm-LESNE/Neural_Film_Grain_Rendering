@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import net as nets
 import train as tr
+import utils as ut
 import scipy.signal
 from scipy import linalg
 from scipy import spatial
@@ -22,9 +23,8 @@ from PIL import Image
 import pickle
 import imageio.v2 as iio
 from tqdm import tqdm
-import dataset as ds
 
-from DISTS_pytorch import DISTS #CITE THIS ONE ON GITHUB
+from DISTS_pytorch import DISTS
 import lpips
 
 #%%
@@ -326,7 +326,7 @@ def local_stats(out_img, in_img, grain_size):
     return tmp_mdist, tmp_vdist, tmp_cdist
 
 def get_images(net, in_img, nat_path, idx, gs, tmp_idx):
-    newson = ds.Newson()
+    newson = ut.Newson()
     nat_img = iio.imread(nat_path)/255.
     if len(nat_img.shape)==3:
         nat_img = nat_img[:,:,0:1]
@@ -531,7 +531,7 @@ save_folder = ''#'L20/'
 
 grain_list = np.round(np.linspace(0.025,0.8,32),3)#np.array([0.01, 0.025, 0.05, 0.075, 0.1])#       
 
-networks = ['./GrainNet/grainnet.pt']
+networks = ['./GrainNet/pretrained/grainnet.pt']
 
 metric = Metrics(ssim, lpip, sifid, dists, gatys, jsd, image_folder)
 

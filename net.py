@@ -19,6 +19,9 @@ class ResidualBlock(nn.Module):
         return self.relu_out(self.block(x) + x)
     
 class MyNorm(nn.Module):
+    """
+    Custom Adaptive Instance Normalization layer
+    """
     def __init__(self, channel_size, insize = 1):
         super().__init__()
         self.insize = insize

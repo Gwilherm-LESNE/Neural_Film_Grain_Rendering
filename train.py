@@ -14,7 +14,6 @@ from torch.utils.data import Dataset, DataLoader
 import torch.optim as optim
 from itertools import product
 from torch.utils.tensorboard import SummaryWriter
-from tensorboard.backend.event_processing import event_accumulator
 import time
 import net as nets
 import argparse
@@ -28,6 +27,17 @@ class GrainDataset(Dataset):
                  label_folder,
                  max_h = 320,
                  max_w = 320):
+        """
+        Initialize the GrainDataset class
+        ipt_folder: str
+            Path where to read grain-free images
+        label_folder: str 
+            Path where to read grainy images
+        max_h: int
+            Maximum height of the images to output
+        max_w: int
+            Maximum width of the images to output
+        """
         
         self.ipt_folder = ipt_folder
         self.label_folder = label_folder
@@ -43,6 +53,18 @@ class GrainDataset(Dataset):
         return len(self.img_names)
     
     def __getitem__(self, i, crop = True):
+        """
+        Get data from the dataset based on its index
+        i: int
+            Data index
+        crop: bool
+            Tells if the images (grain-free and grainy) must be cropped in the max_h, max_w limit
+        
+        returns
+            ipt_img: grain-free image
+            label_img: grainy_image
+            radius: grain_size
+        """
         ipt_img = torchvision.io.read_image(self.ipt_folder + self.img_names[i])[:1,1:,1:] #keep only one channel and drop first line and first column as they have artifacts
         label_img = torchvision.io.read_image(self.label_folder + (6-len(str(i)))*'0'+str(i)+'.png')[:1,1:,1:] 
         #change data range to [0,1] if it's not the case by default
@@ -65,6 +87,9 @@ class GrainDataset(Dataset):
         return ipt_img, label_img, radius
     
 def plot_results(outputs, targets):
+    """
+    Creates a figure with 4 pairs of output images and the corresponding targets
+    """
     plt.ioff()
     fig = plt.figure(figsize=(30, 60))
     for idx in np.arange(4):
@@ -79,23 +104,16 @@ def plot_results(outputs, targets):
         ax.set_title("Grain n°"+str(idx)+", output")
     return fig
 
-def load_run(path):
-  event_acc = event_accumulator.EventAccumulator(path)
-  event_acc.Reload()
-  data = {}
-
-  for tag in sorted(event_acc.Tags()["scalars"]):
-    x, y = [], []
-
-    for scalar_event in event_acc.Scalars(tag):
-      x.append(scalar_event.step)
-      y.append(scalar_event.value)
-
-    data[tag] = (np.asarray(x), np.asarray(y))
-  return data
-
 class StyleLoss(nn.Module):
     def __init__(self, weight, style_indices = None, style_weights = None):
+        """
+        weight: float
+            weight to use between the content and texture terms
+        style_indices: list of ints
+            list of the layer indices to use to extract the VGG's activation maps
+        style_weights: list of floats
+            list of the weights associated to each VGG layer taken in to account
+        """
         super(StyleLoss, self).__init__()
                 
         self.contentLoss = ContentLoss()
@@ -119,7 +137,7 @@ class ContentLoss(nn.Module):
         print("ImageNet's VGG weights for content loss successfully imported")
  
     def forward(self, out_img, label_img):
-            
+        
         if out_img.shape[1] == 1: #For grayscale images
             out_img = out_img.repeat(1,3,1,1)
             
@@ -189,13 +207,13 @@ class TextureLoss(nn.Module):
             
         return loss
 
-def train(parameters, ipt_folder, label_folder, save_folder='/folder/'):
+def train(parameters, ipt_folder, label_folder, save_folder):
     
     param_values = [v for v in parameters.values()]
     print('Parameter values are :' +str(param_values))
     
-    if not os.path.exists('./models'+save_folder):
-        os.mkdir('./models'+save_folder)
+    if not os.path.exists(os.path.join('./models',save_folder)):
+        os.mkdir(os.path.join('./models',save_folder))
     
     for run_id, params in enumerate(product(*param_values)):
         print('_'*50)
@@ -213,10 +231,10 @@ def train(parameters, ipt_folder, label_folder, save_folder='/folder/'):
         ###Create a new SummaryWriter or resume at a checkpoint.
         idx_name=0
         from_chkpt = False
-        while os.path.exists('./models'+save_folder+str(idx_name)+'/'):
-            if os.path.exists('./models'+save_folder+str(idx_name)+'/chkpt.pt'):
+        while os.path.exists(os.path.join('./models',save_folder,str(idx_name))):
+            if os.path.exists(os.path.join('./models',save_folder,str(idx_name),'chkpt.pt')):
                 hyper_params = dict(zip(parameters.keys(),params))
-                checkpoint = torch.load('./models'+save_folder+str(idx_name)+'/chkpt.pt')
+                checkpoint = torch.load(os.path.join('./models',save_folder,str(idx_name),'chkpt.pt'))
                 chkpt_params = dict(zip(list(hyper_params.keys()), [checkpoint[key] for key in hyper_params.keys()]))
                 
                 if (chkpt_params == hyper_params) and (not checkpoint['training_finished']):
@@ -227,8 +245,8 @@ def train(parameters, ipt_folder, label_folder, save_folder='/folder/'):
             else:
                 idx_name += 1
         if not from_chkpt:
-            os.mkdir('./models'+save_folder+str(idx_name))
-        writer = SummaryWriter('./models'+save_folder+str(idx_name))
+            os.mkdir(os.path.join('./models',save_folder,str(idx_name)))
+        writer = SummaryWriter(os.path.join('./models',save_folder,str(idx_name)))
         ###
 
         train_dataset = GrainDataset(ipt_folder = os.path.join(ipt_folder,'train/'), label_folder = os.path.join(label_folder,'train/'))
@@ -237,10 +255,10 @@ def train(parameters, ipt_folder, label_folder, save_folder='/folder/'):
         train_dataloader = DataLoader(train_dataset, batch_size = params[1], shuffle=True, drop_last=True)
         test_dataloader = DataLoader(test_dataset, batch_size = params[1], shuffle=True, drop_last=True)
 
-        net = nets.GrainNet(activation=params[9], block_nb = params[12])
+        net = nets.GrainNet(activation=params[7], block_nb = params[9])
 
-        loss = StyleLoss(weight = params[11], content_mode = params[10], style_indices=params[5], style_weights=params[6])
-        tloss = StyleLoss(weight = params[11], content_mode = params[10], style_indices=params[5], style_weights=params[6])
+        loss = StyleLoss(weight = params[8], style_indices=params[5], style_weights=params[6])
+        tloss = StyleLoss(weight = params[8], style_indices=params[5], style_weights=params[6])
             
         optimizer = optim.Adam(net.parameters(), lr=params[0])
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=params[3], gamma=params[4])
@@ -347,7 +365,7 @@ def train(parameters, ipt_folder, label_folder, save_folder='/folder/'):
                 'optimizer_state_dict': optimizer.state_dict(),
                 'epoch': epoch,
                 'training_finished': training_finished})
-                torch.save(state|dict(zip(parameters.keys(),params)), './models'+save_folder+str(idx_name)+'/chkpt.pt')
+                torch.save(state|dict(zip(parameters.keys(),params)), os.path.join('./models',save_folder,str(idx_name),'chkpt.pt'))
         
         inputs, targets, radius = next(iter(test_dataloader))
         if inputs.shape[0] < 4: #BATCH SIZE MUST BE AT LEAST 2!
@@ -381,12 +399,9 @@ def train(parameters, ipt_folder, label_folder, save_folder='/folder/'):
              "gamma": params[4],
              "style_indices": str(params[5]),
              "style_weights": str(params[6]),
-             "VGG_type": params[7],
-             "VGG_pool": params[8],
-             "activ": params[9],
-             "content_mode": params[10],
-             "content_weight": params[11],
-             "block_nb": params[12]},
+             "activ": params[7],
+             "content_weight": params[8],
+             "block_nb": params[9]},
             {"training loss": train_loss/train_steps,
              "test loss": test_loss/test_steps,
              "texture loss": texture_loss/test_steps,   
@@ -394,12 +409,10 @@ def train(parameters, ipt_folder, label_folder, save_folder='/folder/'):
             },
         )
         
-        save_name = './models'+save_folder+str(idx_name)+'/fg'+str(idx_name)+'.pt'
-    
-        if not os.path.exists('./models'+save_folder+str(idx_name)):
-            os.mkdir('./models'+save_folder+str(idx_name))
+        save_name = os.path.join('./models',save_folder,str(idx_name),'fg'+str(idx_name)+'.pt')
+        if not os.path.exists(os.path.join('./models',save_folder,str(idx_name))):
+            os.mkdir(os.path.join('./models',save_folder,str(idx_name)))
         torch.save(net.state_dict(), save_name)
-        
         
     writer.close()
 
@@ -413,8 +426,8 @@ if __name__=='__main__':
     
     parser.add_argument("-i", '--input_path',metavar = 'input_path', help = "Path to the folder containing grain-free images", type = str, required=True)
     parser.add_argument("-g", '--grain_path',metavar = 'grain_path', help = "Path to the folder containing grainy images", type = str, required=True)
-    parser.add_argument("-s", '--save_path',metavar = 'save_path', help = "Path where to save the model trained and checkpoints", type = str, required=True)
-
+    
+    parser.add_argument("-s", '--save_folder',metavar = 'save_folder', help = "Path where to save the model trained and checkpoints", type = str, default= 'GrainNet/')
     parser.add_argument("-lr", '--learning_rate',metavar = 'learning_rate', help = "Learning_rate", type = float, default = 1e-03)
     parser.add_argument("-bs", '--batch_size', metavar = 'batch_size', help = 'batch_size', type = int, default = 16)
     parser.add_argument("-ne",'--n_epoch', metavar = 'n_epoch', help = "Number_of_epochs", type=int, default = 500)
@@ -450,7 +463,7 @@ if __name__=='__main__':
     train(parameters,
           args.input_path,
           args.grain_path,
-          save_folder = args.save_path)
+          args.save_folder)
     
     end_time = time.time()
     

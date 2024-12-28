@@ -18,6 +18,9 @@ def torch2img(tensor):
         raise ValueError('tensor has wrong shape!')
 
 class VideoReader():
+    """
+    Reads all images from a folder
+    """
     def __init__(self, folder):
         self.folder = folder
         if self.folder[-1] == '/':

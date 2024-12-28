@@ -14,8 +14,7 @@ from torch.utils.data import Dataset, DataLoader
 import torch.optim as optim
 from itertools import product
 from torch.utils.tensorboard import SummaryWriter
-from tensorboard.backend.event_processing import event_accumulator
-
+import argparse
 import net as nets
 
 print('Imports: done')
@@ -27,6 +26,15 @@ class GrainDataset(Dataset):
                  label_folder,
                  max_h = 320,
                  max_w = 320):
+        """
+        Initialize the GrainDataset class
+        label_folder: str 
+            Path where to read grainy images and look for hyperparameters.json file
+        max_h: int
+            Maximum height of the images taken as input
+        max_w: int
+            Maximum width of the images taken as input
+        """
         
         self.label_folder = label_folder
         
@@ -40,19 +48,27 @@ class GrainDataset(Dataset):
     def __len__(self):
         return len(self.img_names)
     
-    def __getitem__(self, i, crop = True):
+    def __getitem__(self, i):
+        """
+        Get data from the dataset based on its index
+        i: int
+            Data index
+
+        returns
+            grainy_img: grainy_image
+            radius: grain_size
+        """
         grainy_img = torchvision.io.read_image(self.label_folder + (6-len(str(i)))*'0'+str(i)+'.png')[:1,1:,1:] 
         #change data range to [0,1] if it's not the case by default
         if grainy_img.dtype is torch.uint8:
             grainy_img = grainy_img.float()/255.
 
-        if crop:
-            x_possible_coords = np.arange(0,grainy_img.shape[1]-self.max_h+1)
-            y_possible_coords = np.arange(0,grainy_img.shape[2]-self.max_w+1)
+        x_possible_coords = np.arange(0,grainy_img.shape[1]-self.max_h+1)
+        y_possible_coords = np.arange(0,grainy_img.shape[2]-self.max_w+1)
 
-            x = np.random.choice(x_possible_coords)
-            y = np.random.choice(y_possible_coords)
-            grainy_img = grainy_img[:,x:x+self.max_h,y:y+self.max_w]
+        x = np.random.choice(x_possible_coords)
+        y = np.random.choice(y_possible_coords)
+        grainy_img = grainy_img[:,x:x+self.max_h,y:y+self.max_w]
 
         radius = torch.tensor([self.radiuses[i]])
 
@@ -70,21 +86,6 @@ def plot_results(inputs, outputs, targets):
             idx+=1
     return fig
 
-def load_run(path):
-  event_acc = event_accumulator.EventAccumulator(path)
-  event_acc.Reload()
-  data = {}
-
-  for tag in sorted(event_acc.Tags()["scalars"]):
-    x, y = [], []
-
-    for scalar_event in event_acc.Scalars(tag):
-      x.append(scalar_event.step)
-      y.append(scalar_event.value)
-
-    data[tag] = (np.asarray(x), np.asarray(y))
-  return data
-
 class Loss(nn.Module):
     def __init__(self):
         super(Loss, self).__init__()
@@ -92,13 +93,13 @@ class Loss(nn.Module):
     def forward(self, out, label):
         return nn.MSELoss()(out,label)
 
-def train(parameters, label_folder, save_folder='/folder/'):
+def train(parameters, label_folder, save_folder):
     
     param_values = [v for v in parameters.values()]
     print('Parameter values are :' +str(param_values))
            
     if not os.path.exists('./models'+save_folder):
-            os.mkdir('./models'+save_folder)
+            os.mkdir(os.path.join('./models',save_folder))
     
     for run_id, params in enumerate(product(*param_values)):
         print('_'*50)
@@ -116,10 +117,10 @@ def train(parameters, label_folder, save_folder='/folder/'):
         #Create a new SummaryWriter or resume at a checkpoint.
         idx_name=0
         from_chkpt = False
-        while os.path.exists('./models'+save_folder+str(idx_name)+'/'):
-            if os.path.exists('./models'+save_folder+str(idx_name)+'/chkpt.pt'):
+        while os.path.exists(os.path.join('./models',save_folder,str(idx_name))):
+            if os.path.exists(os.path.join('./models',save_folder,str(idx_name),'chkpt.pt')):
                 hyper_params = dict(zip(parameters.keys(),params))
-                checkpoint = torch.load('./models'+save_folder+str(idx_name)+'/chkpt.pt')
+                checkpoint = torch.load(os.path.join('./models',save_folder,str(idx_name),'chkpt.pt'))
                 chkpt_params = dict(zip(list(hyper_params.keys()), [checkpoint[key] for key in hyper_params.keys()]))
                 
                 if (chkpt_params == hyper_params) and (not checkpoint['training_finished']):
@@ -130,13 +131,9 @@ def train(parameters, label_folder, save_folder='/folder/'):
             else:
                 idx_name += 1
         if not from_chkpt:
-            os.mkdir('./models'+save_folder+str(idx_name))
-        writer = SummaryWriter('./models'+save_folder+str(idx_name))
+            os.mkdir(os.path.join('./models',save_folder,str(idx_name)))
+        writer = SummaryWriter(os.path.join('./models',save_folder,str(idx_name)))
         
-
-        if label_folder.__class__ == list:
-            raise ValueError("'label_folder' argument in function 'train' is a list. You just need to put the path to grainy images.")
-
         train_dataset = GrainDataset(label_folder = os.path.join(label_folder,'train/'))
         test_dataset = GrainDataset(label_folder = os.path.join(label_folder,'test/'))
 
@@ -250,7 +247,7 @@ def train(parameters, label_folder, save_folder='/folder/'):
                 'optimizer_state_dict': optimizer.state_dict(),
                 'epoch': epoch,
                 'training_finished': training_finished})
-                torch.save(state|dict(zip(parameters.keys(),params)), './models'+save_folder+str(idx_name)+'/chkpt.pt')
+                torch.save(state|dict(zip(parameters.keys(),params)), os.path.join('./models',save_folder,str(idx_name),'chkpt.pt'))
         
         #-------#Plot outputs#-------#
         inputs, radius = next(iter(test_dataloader))
@@ -286,10 +283,10 @@ def train(parameters, label_folder, save_folder='/folder/'):
             },
         )
         
-        save_name = './models'+save_folder+str(idx_name)+'/fg'+str(idx_name)+'.pt'
+        save_name = os.path.join('./models',save_folder,str(idx_name),'fg'+str(idx_name)+'.pt')
     
-        if not os.path.exists('./models'+save_folder+str(idx_name)):
-            os.mkdir('./models'+save_folder+str(idx_name))
+        if not os.path.exists(os.path.join('./models',save_folder,str(idx_name))):
+            os.mkdir(os.path.join('./models',save_folder,str(idx_name)))
         torch.save(net.state_dict(), save_name)
         
         
@@ -301,19 +298,31 @@ print('Defining functions: done')
 
 if __name__=='__main__':
 
-    parameters = dict(lr = [1e-03],
-          batch_size = [16],
-          n_epoch = [500],
-          step_size = [1],
-          gamma = [0.99]
+    parser = argparse.ArgumentParser()
+    
+    parser.add_argument("-i", '--input_path',metavar = 'input_path', help = "Path to the folder containing grainy images", type = str, required=True)
+
+    parser.add_argument("-s", '--save_folder',metavar = 'save_folder', help = "Path where to save the model trained and checkpoints", type = str, default= 'Classifier/')
+    parser.add_argument("-lr", '--learning_rate',metavar = 'learning_rate', help = "Learning_rate", type = float, default = 1e-03)
+    parser.add_argument("-bs", '--batch_size', metavar = 'batch_size', help = 'batch_size', type = int, default = 16)
+    parser.add_argument("-ne",'--n_epoch', metavar = 'n_epoch', help = "Number_of_epochs", type=int, default = 500)
+    parser.add_argument("-ss", '--step_size', metavar = 'step_size', help = "Step_size for optimizer scheduler", type=int, default = 1)
+    parser.add_argument("-ga", '--gamma', metavar = 'gamma', help = "Gamma for optimizer scheduler", type=float, default = 0.99)
+    args = parser.parse_args()
+
+    parameters = dict(lr = [args.learning_rate],
+          batch_size = [args.batch_size],
+          n_epoch = [args.n_epoch],
+          step_size = [args.step_size],
+          gamma = [args.gamma]
     )
     
     import time
     start_time = time.time()
     
     train(parameters,
-          'path/to/your/dataset/folder',
-          save_folder = '/Classifier/')
+          args.input_path,
+          args.save_folder)
     
     end_time = time.time()
     

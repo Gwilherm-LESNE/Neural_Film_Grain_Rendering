@@ -10,8 +10,8 @@ Official implementation of the paper [*Neural Film Grain Rendering*](https://hal
 
 > **Neural Film Grain Rendering** <br>
 >  Gwilherm Lesné, Yann Gousseau, Saïd Ladjal, Alasdair Newson <br>
->  LTCI, Télécom Paris 
->  ISIR, Sorbonne Université<br>
+>  LTCI, Télécom Paris <br>
+>  ISIR, Sorbonne Université <br>
 
 ## Set up
 
@@ -41,22 +41,24 @@ You have two options:
 - You want to train the model on your own data:
   - Get the code [here](https://github.com/alasdairnewson/film_grain_rendering_gpu) and follow the steps to be able to run it properly
   - Add the path to the executable (film_grain_rendering_main) in `dataset.py`
-  - Create the dataset:
+  - Execute the following command and follow the instructions (do not forget to activate the environment before):
     ```
-    python dataset.py ./data/path_to_clean_dataset -m ./data/path_to_newson_method/
+    python dataset.py -p ./path/to/grain-free/images/
     ```
 
 ## Training
 
+### Training GrainNet
+
 ```bash
-python train.py -i './input/path' -g './grain/path' -s './save/path'
+python train.py -i './input/path' -g './grain/path'
 ```
 Required:
-  - `-i` Path to the folder containing the grain-free images
-  - `-g` Path to the folder containing the grainy images
-  - `-s` Path where to save the model and its checkpoint
+  - `-i` Path to the folder containing the **grain-free** images
+  - `-g` Path to the folder containing the **grainy** images
 
 Options:
+  - `-s` Folder in which to save the model and its checkpoint
   - `-lr` Learning rate
   - `-bs` Batch size
   - `-ne` Number of epochs
@@ -70,20 +72,40 @@ Options:
 
 To visualize your training:
 ```bash
-tensorboard --logdir=models
+tensorboard --logdir=models/GrainNet
+```
+### Training the grain size estimator
+
+```bash
+python train_cls.py -i './input/path'
+```
+Required:
+  - `-i` Path to the folder containing the **grainy** images
+
+Options:
+  - `-s` Folder in which to save the model and its checkpoint
+  - `-lr` Learning rate
+  - `-bs` Batch size
+  - `-ne` Number of epochs
+  - `-ss` Step size for optimizer scheduler
+  - `-ga` Gamma for optimizer scheduler
+
+To visualize your training:
+```bash
+tensorboard --logdir=models/Classifier
 ```
 
 ## Running a pretrained model
 
 ```bash
-python edit.py -i ./input/path -o ./output/path -gs grain_size
+python edit.py -i ./image.jpg
 ```
 Options:
   - `-i` Path to the input image.
-  - `-o` Path to the output image.
-  - `-s` Grain size used, it can be any value between 0.01 and 0.8.
-  - `-s` Seed
-  - `-m` Path to the pretrained network file, default: './models/GrainNet/grainnet.pt'
+  - `-o` Path to the output image. default: 'output.png'
+  - `-gs` Grain size used, it can be any value between 0.01 and 0.8. default: 0.1
+  - `-s` Seed. default: Random based on datetime
+  - `-m` Path to the pretrained network file. default: './models/GrainNet/default/grainnet.pt'
 
 ## Licence
 
