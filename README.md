@@ -36,8 +36,9 @@ conda activate filmgrain
 
 You have two options: 
 - You want to use the data we used :
-  - Download the files [here](XXX)
-  - Unzip `XXX.zip` in `data` folder
+  - Download the zip archive [here](https://www.kaggle.com/datasets/gwilhermlsn/neuralfilmgrainrendering)
+  - Unzip `NeuralFilmGrainRendering_Dataset.zip`
+  - The training grainy images are in `Mixed_grain/train` and the training grain-free images are in `Mixed/train`
 - You want to train the model on your own data:
   - Get the code [here](https://github.com/alasdairnewson/film_grain_rendering_gpu) and follow the steps to be able to run it properly
   - Add the path to the executable (film_grain_rendering_main) in `dataset.py`
@@ -119,4 +120,4 @@ If you use our code/data, please cite our paper.
 ## Acknowledgments
 
 This work uses existing libraries for its evaluation.
-We thank [lpips]{https://pypi.org/project/lpips/}, [DISTS_pytorch]{https://pypi.org/project/DISTS-pytorch/} and the following repository for its [SIFID]{https://github.com/tamarott/SinGAN/blob/master/SIFID/sifid_score.py} implementation.
+We thank [lpips](https://pypi.org/project/lpips/), [DISTS_pytorch](https://pypi.org/project/DISTS-pytorch/) and the following repository for its [SIFID](https://github.com/tamarott/SinGAN/blob/master/SIFID/sifid_score.py) implementation.
