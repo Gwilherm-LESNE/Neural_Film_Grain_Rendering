@@ -25,7 +25,7 @@ if __name__=='__main__':
         device = 'cpu'
     
     #Import network
-    net = nt.GrainNet(layer_nb = 2)
+    net = nt.GrainNet(block_nb = 2)
     net.load_state_dict(torch.load(args.model, map_location=torch.device(device)))
     net.eval()
     

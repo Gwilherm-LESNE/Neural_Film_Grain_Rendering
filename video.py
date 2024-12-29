@@ -56,7 +56,7 @@ class Grainer():
             device = 'cuda'
         else:
             device = 'cpu'
-        self.net = nets.GrainNet(layer_nb = 2)
+        self.net = nets.GrainNet(block_nb = 2)
         self.net.load_state_dict(torch.load(model_path, map_location=torch.device(device)))
         self.net.eval()
 

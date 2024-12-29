@@ -2,8 +2,8 @@
 
 Official implementation of the paper [*Neural Film Grain Rendering*](https://hal.science/hal-04667141)
 
-![Python 3.10](https://img.shields.io/badge/Python-3.10-yellow.svg)
-![pytorch 2.5.0](https://img.shields.io/badge/Pytorch-2.5.0-blue.svg)
+![Python 3.9](https://img.shields.io/badge/Python-3.9-yellow.svg)
+![pytorch 1.12.0](https://img.shields.io/badge/Pytorch-1.12.0-blue.svg)
 
 ![image](./images/teaser.png)
 **Figure:** *Film Grain rendered by our method*
@@ -21,14 +21,29 @@ git clone https://github.com/Gwilherm-LESNE/Neural_Film_Grain_Rendering.git
 cd Neural_Film_Grain_Rendering/
 ```
 
-Install the required libraries
+Create a conda environment
 ```bash
-conda env create -f filmgrain.yml
+conda env create -n filmgrain python=3.9
+conda activate filmgrain
 ```
 
-Load the conda environment
+Install the required libraries
 ```bash
-conda activate filmgrain
+numpy
+pandas
+tqdm
+torch >= 1.12.0
+torchvision >= 0.13.0
+matplotlib
+imageio
+```
+
+If you want to use *evaluate.py*, you will also need the following filbraries:
+```bash
+scipy
+lpips
+DISTS-pytorch
+pathlib
 ```
 **N.B.** This code relies on the official CUDA implementation of [**A Stochastic Film Grain Model for Resolution‐Independent Rendering**](https://onlinelibrary.wiley.com/doi/10.1111/cgf.13159) for creating the database and computing the metrics. Please follow the **requirements** [here](https://github.com/alasdairnewson/film_grain_rendering_gpu) to use it.
 
@@ -49,7 +64,7 @@ You have two options:
 
 ## Training
 
-### Training GrainNet
+#### Training GrainNet
 
 ```bash
 python train.py -i './input/path' -g './grain/path'
@@ -76,7 +91,8 @@ To visualize your training:
 tensorboard --logdir=models/GrainNet
 ```
 
-### Training the grain size estimator
+
+#### Training the grain size estimator
 
 ```bash
 python train_cls.py -i './input/path'
@@ -100,7 +116,7 @@ tensorboard --logdir=models/Classifier
 ## Running a pretrained model
 
 ```bash
-python edit.py -i ./image.jpg
+python edit.py -i ./image.png
 ```
 Options:
   - `-i` Path to the input image.

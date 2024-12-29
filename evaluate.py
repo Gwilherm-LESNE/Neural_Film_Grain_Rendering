@@ -557,15 +557,15 @@ for idx,net_name in enumerate(networks):
     state_dict = torch.load('./models/'+net_name)
     
     try:
-        net = nets.GrainNet(layer_nb = 3)
+        net = nets.GrainNet(block_nb = 3)
         net.load_state_dict(state_dict)
     except:
         try:
-            net = nets.GrainNet(layer_nb = 2)
+            net = nets.GrainNet(block_nb = 2)
             net.load_state_dict(state_dict)
         except:
             try:
-                net = nets.GrainNet(layer_nb = 1)
+                net = nets.GrainNet(block_nb = 1)
                 net.load_state_dict(state_dict)
             except:
                 raise ValueError('WRONG network path!')
