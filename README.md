@@ -64,7 +64,7 @@ You have two options:
 
 ## Training
 
-#### Training GrainNet
+### **Training GrainNet**
 
 ```bash
 python train.py -i './input/path' -g './grain/path'
@@ -92,7 +92,7 @@ tensorboard --logdir=models/GrainNet
 ```
 
 
-#### Training the grain size estimator
+### **Training the grain size estimator**
 
 ```bash
 python train_cls.py -i './input/path'
