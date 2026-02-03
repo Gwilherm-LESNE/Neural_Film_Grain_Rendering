@@ -22,6 +22,17 @@ print('Imports: done')
 
 #%%
 
+# Device detection for CUDA, MPS (Apple Silicon), or CPU
+def get_device():
+    if torch.cuda.is_available():
+        return torch.device('cuda')
+    elif torch.backends.mps.is_available():
+        return torch.device('mps')
+    else:
+        return torch.device('cpu')
+
+DEVICE = get_device()
+
 class GrainDataset(Dataset):
     def __init__(self, ipt_folder, 
                  label_folder,
@@ -133,7 +144,7 @@ class ContentLoss(nn.Module):
     def __init__(self):
         super(ContentLoss, self).__init__()
         
-        self.vgg19 = torchvision.models.vgg19(weights='IMAGENET1K_V1').features[:32].cuda()
+        self.vgg19 = torchvision.models.vgg19(weights='IMAGENET1K_V1').features[:32].to(DEVICE)
         print("ImageNet's VGG weights for content loss successfully imported")
  
     def forward(self, out_img, label_img):
@@ -158,7 +169,7 @@ class TextureLoss(nn.Module):
     def __init__(self, style_indices = None, style_weights = None):
         super(TextureLoss, self).__init__()
         
-        self.vgg19 = torchvision.models.vgg19(weights='IMAGENET1K_V1').features[:30].cuda()
+        self.vgg19 = torchvision.models.vgg19(weights='IMAGENET1K_V1').features[:30].to(DEVICE)
         print("ImageNet's VGG weights successfully imported")
                      
         ####CHANGE MAXPOOL INTO AVERAGEPOOL####
@@ -222,9 +233,13 @@ def train(parameters, ipt_folder, label_folder, save_folder):
         print(params)
         torch.manual_seed(0)#Set seed
             
-        torch.cuda.empty_cache() #Empty cache of the GPU
+        # Empty cache based on device type
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        elif torch.backends.mps.is_available():
+            torch.mps.empty_cache()
 
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        device = DEVICE
         sys.stdout.write('DEVICE TYPE :'+ device.type + '\n')
         sys.stdout.flush()
 

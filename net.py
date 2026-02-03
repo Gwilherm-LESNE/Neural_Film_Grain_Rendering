@@ -95,9 +95,7 @@ class GrainNet(nn.Module):
         if not (seed is None):
             torch.manual_seed(seed)
             
-        noise = torch.randn(img.shape)
-        if self.entry_conv[0].weight.is_cuda:
-            noise = noise.cuda()
+        noise = torch.randn(img.shape, device=img.device)
         
         x = torch.cat((noise,img), dim=1)
         

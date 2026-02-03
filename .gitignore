@@ -1,0 +1,28 @@
+dataset/
+
+# OS files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.history/
+
+.venv/
+__pycache__/
+.pytest_cache/
+
+checkpoints/
+exports/
+
+benchmark_results/
+ignored_docs/
+
+*.egg-info/
+*.egg
